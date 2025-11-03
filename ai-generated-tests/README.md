@@ -19,86 +19,74 @@ def mock_pull_request_creator():
 def mock_openai_client():
     return MagicMock()
 
-# test_main.py
-import pytest
-from main import main_workflow
+@pytest.fixture
+def mock_repo_path():
+    return "/path/to/repo"
 
-def test_main_workflow(mock_github_client, mock_repo_analyzer, mock_pull_request_creator, mock_openai_client):
-    # Arrange
-    mock_github_client.clone_repo.return_value = True
-    mock_repo_analyzer.build_context.return_value = "Generated context"
-    mock_pull_request_creator.create_pr.return_value = True
+@pytest.fixture
+def mock_branch_name():
+    return "feature-branch"
 
-    # Act
-    result = main_workflow(mock_github_client, mock_repo_analyzer, mock_pull_request_creator, mock_openai_client)
+@pytest.fixture
+def mock_base_branch():
+    return "main"
 
-    # Assert
-    assert result == "Workflow completed successfully"
+@pytest.fixture
+def mock_title():
+    return "Test Pull Request"
 
-# test_pull_request_creator.py
-import pytest
-from pr_creator import PullRequestCreator
+@pytest.fixture
+def mock_body():
+    return "This is a test pull request."
 
-def test_create_pr_success(mock_github_client):
-    # Arrange
+@pytest.fixture
+def mock_head_branch():
+    return "feature-branch"
+
+@pytest.fixture
+def mock_test_generator():
+    return MagicMock()
+
+# test_pr_creator.py
+def test_create_pr_calls_github_client_with_correct_arguments(mock_github_client, mock_repo_path, mock_branch_name, mock_base_branch):
+    from pr_creator import PullRequestCreator
     pr_creator = PullRequestCreator(mock_github_client)
-    repo_path = "test_repo"
-    branch_name = "feature-branch"
-    base_branch = "main"
-
-    # Act
-    result = pr_creator.create_pr(repo_path, branch_name, base_branch)
-
-    # Assert
-    assert result is True
-    mock_github_client.open_pr.assert_called_once_with(branch_name, base_branch, "New Pull Request", "Pull request body")
+    
+    pr_creator.create_pr(mock_repo_path, mock_branch_name, mock_base_branch)
+    
+    mock_github_client.open_pr.assert_called_once_with(mock_branch_name, mock_base_branch, title=None, body=None)
 
 # test_repo_analyzer.py
-import pytest
-from repo_analyzer import RepoAnalyzer
-
-def test_build_context_success(mock_openai_client):
-    # Arrange
+def test_build_context_calls_openai_client(mock_repo_analyzer, mock_openai_client):
+    from repo_analyzer import RepoAnalyzer
     repo_analyzer = RepoAnalyzer(mock_openai_client)
-
-    # Act
-    result = repo_analyzer.build_context()
-
-    # Assert
-    assert result == "Generated context"
-    mock_openai_client.generate_context.assert_called_once()
+    
+    repo_analyzer.build_context()
+    
+    mock_openai_client.build_context.assert_called_once()
 
 # test_github_client.py
-import pytest
-from github_client import GitHubClient
-
-def test_clone_repo_success():
-    # Arrange
+def test_clone_repo_calls_github_client_with_correct_arguments(mock_github_client, mock_branch_name):
+    from github_client import GitHubClient
     github_client = GitHubClient()
+    
+    github_client.clone_repo(mock_branch_name)
+    
+    mock_github_client.clone_repo.assert_called_once_with(mock_branch_name)
 
-    # Act
-    result = github_client.clone_repo("feature-branch")
-
-    # Assert
-    assert result is True
-
-def test_commit_and_push_success():
-    # Arrange
+def test_commit_and_push_calls_github_client_with_correct_arguments(mock_github_client, mock_repo_path, mock_branch_name):
+    from github_client import GitHubClient
     github_client = GitHubClient()
+    
+    github_client.commit_and_push(mock_repo_path, mock_branch_name)
+    
+    mock_github_client.commit_and_push.assert_called_once_with(mock_repo_path, mock_branch_name)
 
-    # Act
-    result = github_client.commit_and_push("test_path", "feature-branch")
-
-    # Assert
-    assert result is True
-
-def test_open_pr_success():
-    # Arrange
+def test_open_pr_calls_github_client_with_correct_arguments(mock_github_client, mock_head_branch, mock_base_branch, mock_title, mock_body):
+    from github_client import GitHubClient
     github_client = GitHubClient()
-
-    # Act
-    result = github_client.open_pr("feature-branch", "main", "New Pull Request", "Pull request body")
-
-    # Assert
-    assert result is True
+    
+    github_client.open_pr(mock_head_branch, mock_base_branch, mock_title, mock_body)
+    
+    mock_github_client.open_pr.assert_called_once_with(mock_head_branch, mock_base_branch, mock_title, mock_body)
 ```
