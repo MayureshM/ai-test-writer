@@ -8,7 +8,7 @@ def mock_pull_request_creator():
     return MagicMock()
 
 @pytest.fixture
-def mock_repo_analyzer():
+def repo_analyzer_mock():
     return MagicMock()
 
 @pytest.fixture
